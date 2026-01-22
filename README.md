@@ -22,7 +22,7 @@ A Discord bot that monitors forum channels and automatically posts notifications
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/forum-notifier-bot.git
+   git clone https://github.com/Jhn-git/forum-notifier-bot.git
    cd forum-notifier-bot
    ```
 
