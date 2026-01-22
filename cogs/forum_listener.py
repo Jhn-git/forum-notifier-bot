@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import datetime
 from utils.storage import load_settings, save_settings
 
 
@@ -19,8 +20,12 @@ class ForumListener(commands.Cog):
             return
 
         # Check if this is a newly created thread (not archived/unarchived)
-        if not thread.newly_created:
-            return
+        # Threads created more than 10 seconds ago are likely unarchived, not new
+        now = datetime.datetime.now(datetime.timezone.utc)
+        age = (now - thread.created_at).total_seconds()
+
+        if age > 10:
+            return  # Skip old/unarchived threads
 
         # Check if notification channel is set
         notification_channel_id = settings['notification_channel_id']

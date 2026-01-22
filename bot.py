@@ -2,46 +2,47 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
-import asyncio
 
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+SERVER_ID = int(os.getenv('SERVER_ID'))
+
 
 # Bot setup with necessary intents
 intents = discord.Intents.default()
-intents.message_content = True
-intents.guilds = True
-
-bot = commands.Bot(command_prefix="!", intents=intents)
+intents.members = True  # Fixed: needed for thread.owner mention
 
 
-@bot.event
-async def on_ready():
-    """Called when bot is ready and connected."""
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
-    print('------')
+class ForumNotifierBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=intents)
 
-    # Load cogs
-    await load_cogs()
+    async def setup_hook(self):
+        """Called before on_ready. Load cogs and sync commands here."""
+        # Load cogs
+        cogs = ['cogs.forum_listener', 'cogs.config_commands']
+        for cog in cogs:
+            try:
+                await self.load_extension(cog)
+                print(f'Loaded {cog}')
+            except Exception as e:
+                print(f'Failed to load {cog}: {e}')
 
-    # Sync slash commands
-    try:
-        synced = await bot.tree.sync()
-        print(f'Synced {len(synced)} command(s)')
-    except Exception as e:
-        print(f'Failed to sync commands: {e}')
-
-
-async def load_cogs():
-    """Load all cogs from the cogs directory."""
-    cogs = ['cogs.forum_listener', 'cogs.config_commands']
-    for cog in cogs:
+        # Sync slash commands
         try:
-            await bot.load_extension(cog)
-            print(f'Loaded {cog}')
+            synced = await self.tree.sync()
+            print(f'Synced {len(synced)} command(s)')
         except Exception as e:
-            print(f'Failed to load {cog}: {e}')
+            print(f'Failed to sync commands: {e}')
+
+    async def on_ready(self):
+        """Called when bot is ready and connected."""
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
+
+
+bot = ForumNotifierBot()
 
 
 def main():

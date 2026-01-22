@@ -4,15 +4,14 @@ from discord.ext import commands
 from utils.storage import load_settings, save_settings
 
 
-class ConfigCommands(commands.Cog):
+class ConfigCommands(commands.GroupCog, name="forum", description="Forum notifier configuration"):
     """Slash commands for configuring the forum notifier bot."""
 
     def __init__(self, bot):
         self.bot = bot
+        super().__init__()
 
-    forum_group = app_commands.Group(name="forum", description="Forum notifier configuration")
-
-    @forum_group.command(name="monitor", description="Add a forum channel to the monitoring list")
+    @app_commands.command(name="monitor", description="Add a forum channel to the monitoring list")
     @app_commands.describe(channel="The forum channel to monitor")
     @app_commands.default_permissions(administrator=True)
     async def monitor(self, interaction: discord.Interaction, channel: discord.ForumChannel):
@@ -34,7 +33,7 @@ class ConfigCommands(commands.Cog):
             ephemeral=True
         )
 
-    @forum_group.command(name="unmonitor", description="Remove a forum channel from the monitoring list")
+    @app_commands.command(name="unmonitor", description="Remove a forum channel from the monitoring list")
     @app_commands.describe(channel="The forum channel to stop monitoring")
     @app_commands.default_permissions(administrator=True)
     async def unmonitor(self, interaction: discord.Interaction, channel: discord.ForumChannel):
@@ -56,7 +55,7 @@ class ConfigCommands(commands.Cog):
             ephemeral=True
         )
 
-    @forum_group.command(name="list", description="Show all monitored forum channels")
+    @app_commands.command(name="list", description="Show all monitored forum channels")
     @app_commands.default_permissions(administrator=True)
     async def list_forums(self, interaction: discord.Interaction):
         """Show all monitored forums."""
@@ -86,7 +85,7 @@ class ConfigCommands(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @forum_group.command(name="notifications", description="Set the channel for post notifications")
+    @app_commands.command(name="notifications", description="Set the channel for post notifications")
     @app_commands.describe(channel="The channel where notifications will be sent")
     @app_commands.default_permissions(administrator=True)
     async def notifications(self, interaction: discord.Interaction, channel: discord.TextChannel):
@@ -100,7 +99,7 @@ class ConfigCommands(commands.Cog):
             ephemeral=True
         )
 
-    @forum_group.command(name="errors", description="Set the channel for error reports")
+    @app_commands.command(name="errors", description="Set the channel for error reports")
     @app_commands.describe(channel="The channel where errors will be reported")
     @app_commands.default_permissions(administrator=True)
     async def errors(self, interaction: discord.Interaction, channel: discord.TextChannel):
@@ -114,7 +113,7 @@ class ConfigCommands(commands.Cog):
             ephemeral=True
         )
 
-    @forum_group.command(name="color", description="Set the embed color for notifications")
+    @app_commands.command(name="color", description="Set the embed color for notifications")
     @app_commands.describe(hex_color="Hex color code (e.g., #5865F2)")
     @app_commands.default_permissions(administrator=True)
     async def color(self, interaction: discord.Interaction, hex_color: str):
@@ -153,7 +152,7 @@ class ConfigCommands(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @forum_group.command(name="preview", description="Set the preview text length for notifications")
+    @app_commands.command(name="preview", description="Set the preview text length for notifications")
     @app_commands.describe(length="Number of characters to preview (1-500)")
     @app_commands.default_permissions(administrator=True)
     async def preview(self, interaction: discord.Interaction, length: int):
@@ -174,7 +173,7 @@ class ConfigCommands(commands.Cog):
             ephemeral=True
         )
 
-    @forum_group.command(name="settings", description="Display all current settings")
+    @app_commands.command(name="settings", description="Display all current settings")
     @app_commands.default_permissions(administrator=True)
     async def settings_display(self, interaction: discord.Interaction):
         """Display all current settings."""
@@ -226,7 +225,7 @@ class ConfigCommands(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @forum_group.command(name="test", description="Send a test notification")
+    @app_commands.command(name="test", description="Send a test notification")
     @app_commands.default_permissions(administrator=True)
     async def test(self, interaction: discord.Interaction):
         """Send a test notification."""

@@ -53,3 +53,5 @@ htmlcov/
 
 # Settings (optional - uncomment if you want to keep settings private)
 # data/settings.json
+CLAUDE.md
+data/settings.json
