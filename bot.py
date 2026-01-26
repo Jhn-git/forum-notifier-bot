@@ -12,6 +12,7 @@ SERVER_ID = int(os.getenv('SERVER_ID'))
 # Bot setup with necessary intents
 intents = discord.Intents.default()
 intents.members = True  # Fixed: needed for thread.owner mention
+intents.message_content = True  # Required to read message content for previews
 
 
 class ForumNotifierBot(commands.Bot):

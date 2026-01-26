@@ -71,10 +71,8 @@ class ForumListener(commands.Cog):
             # Fetch the starter message
             starter_message = thread.starter_message
             if not starter_message:
-                # If not cached, fetch it
-                async for message in thread.history(limit=1, oldest_first=True):
-                    starter_message = message
-                    break
+                # Fetch using thread ID (equals starter message ID)
+                starter_message = await thread.fetch_message(thread.id)
 
             if starter_message and starter_message.content:
                 preview_length = settings['preview_length']
@@ -84,7 +82,7 @@ class ForumListener(commands.Cog):
                 else:
                     preview_text = f'"{content}"'
         except Exception as e:
-            print(f"Error fetching thread starter message: {e}")
+            print(f"Error fetching thread starter message for '{thread.name}': {e}")
             preview_text = ""
 
         # Extract attachment info
