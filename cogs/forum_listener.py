@@ -66,6 +66,7 @@ class ForumListener(commands.Cog):
         """Build the notification embed."""
         # Get preview text from the first message
         preview_text = ""
+        starter_message = None
         try:
             # Fetch the starter message
             starter_message = thread.starter_message
@@ -86,15 +87,44 @@ class ForumListener(commands.Cog):
             print(f"Error fetching thread starter message: {e}")
             preview_text = ""
 
-        # Build embed
+        # Extract attachment info
+        media_type, media_url, has_video = self._get_media_info(starter_message)
+
+        # Get forum name
         forum_name = thread.parent.name if thread.parent else "Unknown Forum"
 
+        # Extract tag names
+        tag_names = self._get_tag_names(thread)
+
+        # Build description with sections
+        description_parts = []
+        if preview_text:
+            description_parts.append(preview_text)
+        if tag_names:
+            description_parts.append(f"🏷️ {' • '.join(tag_names)}")
+        if has_video:
+            description_parts.append("🎬 Video attached")
+
+        description = "\n".join(description_parts) if description_parts else ""
+
+        # Build embed with clickable title
         embed = discord.Embed(
-            title=f"📝 New Post in #{forum_name}",
-            description=f"**{thread.name}**\n\n{preview_text}" if preview_text else f"**{thread.name}**",
+            title=thread.name,
+            url=thread.jump_url,
+            description=description,
             color=int(settings['embed_color'].replace('#', ''), 16),
             timestamp=discord.utils.utcnow()
         )
+
+        # Add footer
+        embed.set_footer(text=f"Posted in #{forum_name}")
+
+        # Add avatar thumbnail
+        if thread.owner:
+            try:
+                embed.set_thumbnail(url=thread.owner.display_avatar.url)
+            except Exception as e:
+                print(f"Error setting avatar: {e}")
 
         # Add author field
         if thread.owner:
@@ -104,20 +134,18 @@ class ForumListener(commands.Cog):
                 inline=False
             )
 
+        # Add media image
+        if media_url:
+            try:
+                embed.set_image(url=media_url)
+            except Exception as e:
+                print(f"Error setting media image: {e}")
+
         return embed
 
     def _build_buttons(self, thread: discord.Thread) -> discord.ui.View:
         """Build the button view with link buttons."""
         view = discord.ui.View()
-
-        # Jump to Post button
-        view.add_item(
-            discord.ui.Button(
-                label="🔗 Jump to Post",
-                url=thread.jump_url,
-                style=discord.ButtonStyle.link
-            )
-        )
 
         # View Forum button
         if thread.parent:
@@ -131,6 +159,61 @@ class ForumListener(commands.Cog):
             )
 
         return view
+
+    def _get_media_info(self, starter_message) -> tuple:
+        """Extract media attachment information from starter message.
+
+        Returns:
+            tuple: (media_type, media_url, has_video)
+                - media_type: 'image', 'video', or None
+                - media_url: attachment URL or None
+                - has_video: Boolean indicating if video is present
+        """
+        try:
+            if not starter_message or not starter_message.attachments:
+                return (None, None, False)
+
+            for attachment in starter_message.attachments:
+                content_type = attachment.content_type
+                if not content_type:
+                    continue
+
+                if content_type.startswith('image/'):
+                    return ('image', attachment.url, False)
+                elif content_type.startswith('video/'):
+                    return ('video', attachment.url, True)
+
+            return (None, None, False)
+        except Exception as e:
+            print(f"Error getting media info: {e}")
+            return (None, None, False)
+
+    def _get_tag_names(self, thread: discord.Thread) -> list:
+        """Resolve thread tag IDs to tag names.
+
+        Returns:
+            list: List of tag names applied to the thread
+        """
+        try:
+            if not hasattr(thread, 'applied_tags') or not thread.applied_tags:
+                return []
+
+            if not thread.parent or not hasattr(thread.parent, 'available_tags'):
+                return []
+
+            # Build tag lookup dictionary
+            tag_lookup = {tag.id: tag.name for tag in thread.parent.available_tags}
+
+            # Resolve tag IDs to names
+            tag_names = []
+            for tag in thread.applied_tags:
+                if tag.id in tag_lookup:
+                    tag_names.append(tag_lookup[tag.id])
+
+            return tag_names
+        except Exception as e:
+            print(f"Error getting tag names: {e}")
+            return []
 
     async def _handle_error(self, settings: dict, error_message: str):
         """Handle and report errors."""

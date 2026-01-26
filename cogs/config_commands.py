@@ -246,11 +246,18 @@ class ConfigCommands(commands.GroupCog, name="forum", description="Forum notifie
 
             # Build test embed
             embed = discord.Embed(
-                title="📝 New Post in #test-forum",
-                description="**Test Post Title**\n\n\"This is a test notification to verify the bot is working correctly...\"",
+                title="Test Post Title",
+                url="https://discord.com",
+                description="\"This is a test notification to verify the bot is working correctly...\"\n🏷️ Help • Question\n🎬 Video attached",
                 color=int(settings['embed_color'].replace('#', ''), 16),
                 timestamp=discord.utils.utcnow()
             )
+
+            # Add footer
+            embed.set_footer(text="Posted in #test-forum")
+
+            # Add mock avatar thumbnail
+            embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
             embed.add_field(
                 name="👤 Posted by",
@@ -258,15 +265,11 @@ class ConfigCommands(commands.GroupCog, name="forum", description="Forum notifie
                 inline=False
             )
 
-            # Build test buttons
+            # Add mock image
+            embed.set_image(url="https://via.placeholder.com/800x450.png?text=Video+Thumbnail")
+
+            # Build test buttons (only View Forum button)
             view = discord.ui.View()
-            view.add_item(
-                discord.ui.Button(
-                    label="🔗 Jump to Post",
-                    url="https://discord.com",
-                    style=discord.ButtonStyle.link
-                )
-            )
             view.add_item(
                 discord.ui.Button(
                     label="📁 View Forum",
