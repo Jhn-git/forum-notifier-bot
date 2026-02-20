@@ -6,8 +6,13 @@ cd "$(dirname "$0")"
 echo "Pulling latest changes..."
 git pull
 
+if [ ! -d ".venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv .venv
+fi
+
 echo "Installing dependencies..."
-pip install -r requirements.txt -q
+.venv/bin/pip install -r requirements.txt -q
 
 echo "Starting bot..."
-python bot.py
+exec .venv/bin/python bot.py
