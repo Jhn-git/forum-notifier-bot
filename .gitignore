@@ -55,3 +55,4 @@ htmlcov/
 # data/settings.json
 CLAUDE.md
 data/settings.json
+.venv/*
