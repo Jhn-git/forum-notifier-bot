@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 import datetime
@@ -55,12 +56,38 @@ class ForumListener(commands.Cog):
         try:
             embed = await self._build_embed(thread, settings)
             view = self._build_buttons(thread)
-            await notification_channel.send(embed=embed, view=view)
+            message = await notification_channel.send(embed=embed, view=view)
+            asyncio.create_task(self._auto_shrink(message, thread))
         except Exception as e:
             await self._handle_error(
                 settings,
                 f"Failed to send notification for post in {thread.parent.name}: {str(e)}"
             )
+
+    async def _auto_shrink(self, message: discord.Message, thread: discord.Thread):
+        await asyncio.sleep(300)
+        try:
+            settings = load_settings()
+            compact_embed = self._build_compact_embed(thread, settings)
+            await message.edit(embed=compact_embed, view=None)
+        except discord.NotFound:
+            pass
+        except Exception as e:
+            print(f"Error shrinking notification for '{thread.name}': {e}")
+
+    def _build_compact_embed(self, thread: discord.Thread, settings: dict) -> discord.Embed:
+        forum_name = thread.parent.name if thread.parent else "Unknown Forum"
+        forum_url = f"https://discord.com/channels/{thread.guild.id}/{thread.parent_id}"
+
+        author_text = thread.owner.mention if thread.owner else "Unknown"
+        description = f"👤 Posted by {author_text} | [#{forum_name}]({forum_url})"
+
+        return discord.Embed(
+            title=thread.name,
+            url=thread.jump_url,
+            description=description,
+            color=int(settings['embed_color'].replace('#', ''), 16)
+        ).set_footer(text=f"Posted in #{forum_name}")
 
     async def _build_embed(self, thread: discord.Thread, settings: dict) -> discord.Embed:
         """Build the notification embed."""
